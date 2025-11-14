@@ -1,0 +1,363 @@
+/* VSAQ PHP - Simple, Clean Styling */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #1a73e8;
+    --primary-dark: #1557b0;
+    --danger-color: #d93025;
+    --success-color: #1e8e3e;
+    --warning-color: #f9ab00;
+    --border-color: #dadce0;
+    --bg-light: #f8f9fa;
+    --text-color: #202124;
+    --text-secondary: #5f6368;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background: #fff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+.header {
+    background: var(--primary-color);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    font-size: 28px;
+    font-weight: 400;
+}
+
+.subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-top: 4px;
+}
+
+/* Toolbar */
+.toolbar {
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.toolbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.toolbar-left, .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toolbar label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Buttons */
+.btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    background: var(--bg-light);
+    border-color: var(--text-secondary);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-danger:hover {
+    background: var(--danger-color);
+    color: white;
+}
+
+/* Select */
+select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: white;
+    font-size: 14px;
+    min-width: 250px;
+}
+
+/* Progress */
+.progress-container {
+    margin: 20px 0;
+    padding: 15px;
+    background: var(--bg-light);
+    border-radius: 4px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--success-color);
+    transition: width 0.3s;
+}
+
+.progress-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Info Box */
+.info-box {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--bg-light);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 4px;
+}
+
+.info-box h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.info-box p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+/* Questionnaire Items */
+.questionnaire-item {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.questionnaire-item.block {
+    background: var(--bg-light);
+    border-left: 4px solid var(--primary-color);
+}
+
+.questionnaire-item.info {
+    background: #e8f0fe;
+    border-left: 4px solid var(--primary-color);
+}
+
+.questionnaire-item.tip {
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.questionnaire-item.tip.critical {
+    background: #fce8e6;
+    border-left: 4px solid var(--danger-color);
+}
+
+.questionnaire-item.tip.high {
+    background: #fef7e0;
+    border-left: 4px solid var(--warning-color);
+}
+
+.questionnaire-item.tip.medium {
+    background: #e6f4ea;
+    border-left: 4px solid var(--success-color);
+}
+
+.item-question {
+    font-weight: 500;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.item-question.required::after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+.item-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.item-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.item-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+}
+
+textarea.item-input {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Checkboxes and Radios */
+.item-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.item-option:hover {
+    background: var(--bg-light);
+}
+
+.item-option input[type="checkbox"],
+.item-option input[type="radio"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.item-option label {
+    cursor: pointer;
+    flex: 1;
+    font-size: 14px;
+}
+
+/* Nested Items */
+.nested-items {
+    margin-left: 20px;
+    margin-top: 15px;
+    padding-left: 20px;
+    border-left: 2px solid var(--border-color);
+}
+
+/* Block Items */
+.block-header {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+.block-content {
+    margin-top: 15px;
+}
+
+/* Spacer */
+.spacer {
+    height: 20px;
+}
+
+/* Hidden Items */
+.questionnaire-item.hidden {
+    display: none;
+}
+
+/* Auto-save indicator */
+.autosave-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 4px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.autosave-indicator.show {
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .toolbar .container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbar-left, .toolbar-right {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .nested-items {
+        margin-left: 10px;
+        padding-left: 10px;
+    }
+}

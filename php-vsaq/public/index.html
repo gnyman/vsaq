@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSAQ - Vendor Security Assessment Questionnaire</title>
+    <link rel="stylesheet" href="css/vsaq.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>VSAQ</h1>
+                <p class="subtitle">Vendor Security Assessment Questionnaire</p>
+            </div>
+        </header>
+
+        <nav class="toolbar">
+            <div class="container">
+                <div class="toolbar-left">
+                    <label for="questionnaire-select">Questionnaire:</label>
+                    <select id="questionnaire-select">
+                        <option value="">Select a questionnaire...</option>
+                        <option value="questionnaires/webapp.json">Web Application Security</option>
+                        <option value="questionnaires/infrastructure.json">Infrastructure Security</option>
+                        <option value="questionnaires/security_privacy_programs.json">Security & Privacy Programs</option>
+                        <option value="questionnaires/physical_and_datacenter.json">Physical & Datacenter Security</option>
+                        <option value="questionnaires/test_template.json">Test Template</option>
+                    </select>
+                </div>
+                <div class="toolbar-right">
+                    <button id="import-btn" class="btn">Import Answers</button>
+                    <button id="export-btn" class="btn btn-primary">Export Answers</button>
+                    <button id="clear-btn" class="btn btn-danger">Clear All</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div id="progress-container" class="progress-container" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progress-answered">0</span> of <span id="progress-total">0</span> answered
+                    (<span id="progress-percent">0</span>%)
+                </div>
+            </div>
+
+            <div id="questionnaire-info" class="info-box" style="display: none;">
+                <h2 id="questionnaire-title"></h2>
+                <p id="questionnaire-description"></p>
+            </div>
+
+            <div id="questionnaire-content"></div>
+
+            <div id="loading" class="loading">
+                <p>Select a questionnaire to begin...</p>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="import-file-input" accept=".json" style="display: none;">
+
+    <script src="js/vsaq.js"></script>
+</body>
+</html>
