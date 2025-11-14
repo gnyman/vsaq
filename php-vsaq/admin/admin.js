@@ -23,7 +23,7 @@ class VSAQAdmin {
         }
     }
 
-    showLogin() {
+    async showLogin() {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('dashboard').style.display = 'none';
 
@@ -33,12 +33,25 @@ class VSAQAdmin {
         // Register button
         document.getElementById('register-btn').addEventListener('click', () => this.register());
 
-        // Enter key on username
-        document.getElementById('username').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.login();
+        // Check if registration is allowed
+        await this.checkRegistrationAllowed();
+    }
+
+    async checkRegistrationAllowed() {
+        try {
+            const response = await fetch('/php-vsaq/api/auth/can-register');
+            const data = await response.json();
+
+            const registerBtn = document.getElementById('register-btn');
+            const divider = document.querySelector('.divider');
+
+            if (!data.can_register) {
+                registerBtn.style.display = 'none';
+                divider.style.display = 'none';
             }
-        });
+        } catch (error) {
+            console.error('Failed to check registration status:', error);
+        }
     }
 
     showDashboard() {
@@ -108,12 +121,7 @@ class VSAQAdmin {
     }
 
     async register() {
-        const username = document.getElementById('username').value.trim();
-
-        if (!username) {
-            this.showMessage('Please enter a username', 'error');
-            return;
-        }
+        const username = 'admin'; // Default username for single admin system
 
         try {
             this.showMessage('Setting up passkey...', 'success');
@@ -187,16 +195,23 @@ class VSAQAdmin {
 
             const options = await optionsResponse.json();
 
+            // Prepare options for WebAuthn
+            const publicKeyOptions = {
+                ...options,
+                challenge: this.base64urlDecode(options.challenge)
+            };
+
+            // Only include allowCredentials if it's not empty (for discoverable credentials)
+            if (options.allowCredentials && options.allowCredentials.length > 0) {
+                publicKeyOptions.allowCredentials = options.allowCredentials.map(cred => ({
+                    ...cred,
+                    id: typeof cred.id === 'string' ? this.base64urlDecode(cred.id) : cred.id
+                }));
+            }
+
             // Get credential
             const credential = await navigator.credentials.get({
-                publicKey: {
-                    ...options,
-                    challenge: this.base64urlDecode(options.challenge),
-                    allowCredentials: options.allowCredentials.map(cred => ({
-                        ...cred,
-                        id: typeof cred.id === 'string' ? this.base64urlDecode(cred.id) : cred.id
-                    }))
-                }
+                publicKey: publicKeyOptions
             });
 
             // Verify with server

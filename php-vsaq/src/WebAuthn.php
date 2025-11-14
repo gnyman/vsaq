@@ -60,8 +60,8 @@ class WebAuthn {
             'timeout' => 60000,
             'attestation' => 'none',
             'authenticatorSelection' => [
-                'authenticatorAttachment' => 'platform',
-                'requireResidentKey' => false,
+                'residentKey' => 'required',
+                'requireResidentKey' => true,
                 'userVerification' => 'preferred'
             ]
         ];
@@ -118,7 +118,8 @@ class WebAuthn {
         $stmt->execute([$user['id'], $credentialId, $publicKey, time()]);
 
         // Clean up challenge
-        $this->db->exec("DELETE FROM webauthn_challenges WHERE username = '$username'");
+        $stmt = $this->db->prepare("DELETE FROM webauthn_challenges WHERE username = ?");
+        $stmt->execute([$username]);
 
         return true;
     }
@@ -133,20 +134,12 @@ class WebAuthn {
         $stmt = $this->db->prepare("INSERT INTO webauthn_challenges (challenge, created_at) VALUES (?, ?)");
         $stmt->execute([$challenge, time()]);
 
-        // Get all credential IDs
-        $stmt = $this->db->query("SELECT credential_id FROM webauthn_credentials");
-        $credentials = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
+        // Use empty allowCredentials to enable discoverable credentials (passkey picker)
         return [
             'challenge' => $this->base64url_encode($challenge),
             'timeout' => 60000,
             'rpId' => $this->rpId,
-            'allowCredentials' => array_map(function($id) {
-                return [
-                    'type' => 'public-key',
-                    'id' => $id
-                ];
-            }, $credentials),
+            'allowCredentials' => [],
             'userVerification' => 'preferred'
         ];
     }
@@ -204,7 +197,8 @@ class WebAuthn {
         $stmt->execute([time(), $storedCred['admin_id']]);
 
         // Clean up challenge
-        $this->db->exec("DELETE FROM webauthn_challenges WHERE challenge = '" . $row['challenge'] . "'");
+        $stmt = $this->db->prepare("DELETE FROM webauthn_challenges WHERE challenge = ?");
+        $stmt->execute([$row['challenge']]);
 
         return $storedCred['admin_id'];
     }

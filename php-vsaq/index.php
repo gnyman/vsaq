@@ -69,6 +69,9 @@ if (strpos($path, '/api/') === 0) {
             case '/api/auth/check':
                 handleAuthCheck();
                 break;
+            case '/api/auth/can-register':
+                handleCanRegister();
+                break;
 
             // Admin - Questionnaire Templates
             case '/api/admin/templates':
@@ -146,7 +149,17 @@ function handleRegisterOptions() {
         throw new Exception('Username required');
     }
 
-    $origin = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    // Check if any admin already exists (only allow one admin)
+    $db = Database::getInstance()->getPdo();
+    $stmt = $db->query("SELECT COUNT(*) FROM admins");
+    $adminCount = $stmt->fetchColumn();
+
+    if ($adminCount > 0) {
+        http_response_code(403);
+        throw new Exception('An admin already exists. Only one admin account is allowed.');
+    }
+
+    $origin = getOrigin();
     $rpId = $_SERVER['HTTP_HOST'];
 
     $webauthn = new WebAuthn($rpId, 'VSAQ Admin', $origin);
@@ -164,7 +177,7 @@ function handleRegisterVerify() {
         throw new Exception('Invalid data');
     }
 
-    $origin = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    $origin = getOrigin();
     $rpId = $_SERVER['HTTP_HOST'];
 
     $webauthn = new WebAuthn($rpId, 'VSAQ Admin', $origin);
@@ -174,7 +187,7 @@ function handleRegisterVerify() {
 }
 
 function handleLoginOptions() {
-    $origin = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    $origin = getOrigin();
     $rpId = $_SERVER['HTTP_HOST'];
 
     $webauthn = new WebAuthn($rpId, 'VSAQ Admin', $origin);
@@ -191,7 +204,7 @@ function handleLoginVerify() {
         throw new Exception('Invalid data');
     }
 
-    $origin = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    $origin = getOrigin();
     $rpId = $_SERVER['HTTP_HOST'];
 
     $webauthn = new WebAuthn($rpId, 'VSAQ Admin', $origin);
@@ -218,7 +231,7 @@ function handleLogout() {
     $sessionId = $_COOKIE['vsaq_session'] ?? null;
 
     if ($sessionId) {
-        $origin = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+        $origin = getOrigin();
         $rpId = $_SERVER['HTTP_HOST'];
 
         $webauthn = new WebAuthn($rpId, 'VSAQ Admin', $origin);
@@ -236,6 +249,14 @@ function handleAuthCheck() {
     } else {
         echo json_encode(['authenticated' => false]);
     }
+}
+
+function handleCanRegister() {
+    $db = Database::getInstance()->getPdo();
+    $stmt = $db->query("SELECT COUNT(*) FROM admins");
+    $adminCount = $stmt->fetchColumn();
+
+    echo json_encode(['can_register' => $adminCount === 0]);
 }
 
 // ============================================================================
@@ -658,6 +679,24 @@ function handleSubmitForm($uniqueLink) {
 // UTILITY FUNCTIONS
 // ============================================================================
 
+function getOrigin() {
+    // Check for common proxy headers that indicate HTTPS
+    $isHttps = false;
+
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        $isHttps = true;
+    } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+        $isHttps = true;
+    } elseif (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
+        $isHttps = true;
+    } elseif (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+        $isHttps = true;
+    }
+
+    $protocol = $isHttps ? 'https' : 'http';
+    return $protocol . '://' . $_SERVER['HTTP_HOST'];
+}
+
 function getCurrentAdmin() {
     $sessionId = $_COOKIE['vsaq_session'] ?? null;
 
@@ -665,7 +704,7 @@ function getCurrentAdmin() {
         return false;
     }
 
-    $origin = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    $origin = getOrigin();
     $rpId = $_SERVER['HTTP_HOST'];
 
     $webauthn = new WebAuthn($rpId, 'VSAQ Admin', $origin);
