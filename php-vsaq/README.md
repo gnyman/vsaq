@@ -1,15 +1,17 @@
 # VSAQ PHP - Vendor Security Assessment Questionnaire
 
-A simple, lightweight PHP rewrite of Google's VSAQ (Vendor Security Assessment Questionnaire) with zero dependencies.
+A simple, lightweight PHP rewrite of Google's VSAQ (Vendor Security Assessment Questionnaire) with zero dependencies and a complete admin interface.
 
 ## What is VSAQ?
 
-VSAQ is an interactive questionnaire application designed for security assessments of third-party vendors and service providers. It helps organizations:
+VSAQ is an interactive questionnaire application designed for security assessments of third-party vendors and service providers. This PHP version adds:
 
-- Conduct security reviews of vendors
-- Gather structured security information
-- Perform self-assessments
-- Learn about web application security issues
+- **WebAuthn Admin Interface** - Secure passkey-only authentication
+- **Questionnaire Management** - Create, edit, duplicate, and archive templates
+- **Unique Link Generation** - Send questionnaires via secure unique links
+- **Server-Side Auto-Save** - Automatic saving with conflict detection
+- **Form Locking** - Submitted forms are locked but viewable
+- **Real-Time Progress Tracking** - Visual indicators for completion status
 
 ## Features
 
@@ -53,10 +55,56 @@ php -S localhost:8000
 3. **Open in browser**:
 
 ```
-http://localhost:8000
+http://localhost:8000/php-vsaq/admin/
 ```
 
+4. **Register the first admin**:
+   - Enter a username
+   - Click "Register New Admin"
+   - Follow your browser's passkey setup prompts
+   - Your passkey is now registered!
+
+5. **Login with your passkey** and start creating questionnaires
+
 That's it! No build process, no dependencies to install.
+
+## Admin Workflow
+
+### 1. Login with WebAuthn/Passkeys
+
+- Secure, password-free authentication
+- Uses device biometrics (fingerprint, face ID, etc.)
+- All admins have equal permissions
+
+### 2. Create Questionnaire Templates
+
+- Create templates from scratch or duplicate existing ones
+- Edit JSON content directly in the browser
+- Archive templates that are no longer needed
+- Templates can't be edited once a questionnaire has been sent
+
+### 3. Send Questionnaires
+
+- Select a template
+- Add optional target name and email (for your reference)
+- Generate a unique, secure link
+- Share the link with the recipient
+
+### 4. Recipients Fill Out Forms
+
+- Access via unique link (no login required)
+- Auto-save on every input change
+- Conflict detection if opened in multiple tabs
+- Visual progress indicator
+- Submit when complete (locks the form)
+
+### 5. Review Submitted Questionnaires
+
+- View all sent questionnaires in the dashboard
+- See submission status and answer counts
+- Open any questionnaire to view answers (read-only)
+- Unlock if changes are needed
+- Cannot delete submitted questionnaires
 
 ### Production Deployment
 
@@ -229,31 +277,97 @@ Complex conditions:
 
 ```
 php-vsaq/
-├── index.php              # Main entry point & API router
+├── index.php                 # Main entry point & API router
+├── src/
+│   ├── Database.php          # SQLite database setup
+│   ├── WebAuthn.php          # WebAuthn authentication
+│   └── data/                 # Database files (auto-created, gitignored)
+├── admin/
+│   ├── index.html            # Admin dashboard
+│   ├── admin.css             # Admin styles
+│   └── admin.js              # Admin interface logic
 ├── public/
-│   ├── index.html         # Main UI
+│   ├── fill.html             # Form filling page
 │   ├── js/
-│   │   └── vsaq.js        # Client-side JavaScript
+│   │   ├── vsaq.js           # Original client-side (deprecated)
+│   │   └── fill.js           # Server-backed form filling
 │   └── css/
-│       └── vsaq.css       # Styling
-├── questionnaires/        # Questionnaire templates (JSON)
+│       ├── vsaq.css          # Base styling
+│       └── fill.css          # Fill form styles
+├── questionnaires/           # Questionnaire templates (JSON)
 │   ├── webapp.json
 │   ├── infrastructure.json
 │   ├── security_privacy_programs.json
 │   ├── physical_and_datacenter.json
 │   └── test_template.json
-├── data/                  # Auto-created for backend storage (optional)
-│   └── answers/          # Saved answers (if using backend storage)
 └── README.md
 ```
 
+## API Endpoints
+
+### Authentication
+
+- `POST /api/auth/register/options` - Get WebAuthn registration options
+- `POST /api/auth/register/verify` - Verify WebAuthn registration
+- `POST /api/auth/login/options` - Get WebAuthn login options
+- `POST /api/auth/login/verify` - Verify WebAuthn login
+- `POST /api/auth/logout` - Logout current session
+- `GET /api/auth/check` - Check authentication status
+
+### Admin - Templates
+
+- `GET /api/admin/templates` - List all templates
+- `GET /api/admin/templates/{id}` - Get specific template
+- `POST /api/admin/templates` - Create new template
+- `PUT /api/admin/templates/{id}` - Update template
+- `DELETE /api/admin/templates/{id}` - Delete template
+- `POST /api/admin/templates/{id}/duplicate` - Duplicate template
+- `POST /api/admin/templates/{id}/archive` - Archive/unarchive template
+
+### Admin - Questionnaire Instances
+
+- `GET /api/admin/instances` - List all sent questionnaires
+- `GET /api/admin/instances/{id}` - Get specific instance
+- `POST /api/admin/instances` - Create new instance (generate link)
+- `DELETE /api/admin/instances/{id}` - Delete instance
+- `POST /api/admin/instances/{id}/unlock` - Unlock submitted instance
+
+### Form Filling
+
+- `GET /api/fill/{uniqueLink}` - Get questionnaire and answers
+- `POST /api/fill/{uniqueLink}/save` - Save individual answer
+- `POST /api/fill/{uniqueLink}/submit` - Submit questionnaire (locks it)
+
 ## Security Considerations
 
-1. **Data Storage**: By default, answers are stored only in browser LocalStorage (client-side)
-2. **Backend Storage**: The optional backend storage (`/api/save` endpoint) should be secured with authentication in production
-3. **Input Validation**: All user inputs are sanitized
-4. **Path Traversal**: Questionnaire paths are validated to prevent directory traversal
-5. **HTTPS**: Always use HTTPS in production to protect data in transit
+### Authentication
+
+- **WebAuthn Only**: No passwords - uses device-based passkeys
+- **Session Management**: Secure HTTP-only cookies, 7-day expiration
+- **All Admins Equal**: No role hierarchy, all admins have full access
+
+### Data Protection
+
+- **Server-Side Storage**: All answers stored in SQLite database
+- **Auto-Save**: Changes saved to server immediately
+- **Conflict Detection**: Prevents data loss from concurrent editing
+- **Form Locking**: Submitted forms are locked server-side
+- **Input Validation**: All inputs sanitized and validated
+
+### Production Recommendations
+
+1. **Use HTTPS**: Always run in production with SSL/TLS
+2. **Secure Cookies**: Set `secure` flag on cookies (requires HTTPS)
+3. **Database Backup**: Regular backups of `src/data/vsaq.db`
+4. **File Permissions**: Restrict database file permissions (0600)
+5. **WebAuthn Domain**: Ensure `rpId` matches your domain
+6. **Rate Limiting**: Consider adding rate limiting to API endpoints
+
+### Known Limitations
+
+- **WebAuthn Verification**: Simplified implementation - signature verification is not cryptographically validated
+- **For Production**: Consider using a proper WebAuthn library like `web-auth/webauthn-lib`
+- **SQLite Concurrent Writes**: May have issues under very high load - consider PostgreSQL/MySQL for high traffic
 
 ## Browser Compatibility
 

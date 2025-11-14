@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSAQ Admin - Dashboard</title>
+    <link rel="stylesheet" href="../public/css/vsaq.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="login-screen">
+            <div class="login-container">
+                <h1>VSAQ Admin</h1>
+                <p class="subtitle">Vendor Security Assessment Questionnaire</p>
+
+                <div id="login-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Enter username" autocomplete="username webauthn">
+                    </div>
+
+                    <button id="login-btn" class="btn btn-primary btn-large">
+                        Login with Passkey
+                    </button>
+
+                    <div class="divider">or</div>
+
+                    <button id="register-btn" class="btn btn-large">
+                        Register New Admin
+                    </button>
+                </div>
+
+                <div id="login-message" class="message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboard" style="display: none;">
+            <header class="header">
+                <div class="container">
+                    <h1>VSAQ Admin</h1>
+                    <button id="logout-btn" class="btn btn-danger">Logout</button>
+                </div>
+            </header>
+
+            <nav class="tabs">
+                <div class="container">
+                    <button class="tab-btn active" data-tab="templates">Templates</button>
+                    <button class="tab-btn" data-tab="instances">Questionnaires</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <!-- Templates Tab -->
+                <div id="tab-templates" class="tab-content active">
+                    <div class="tab-header">
+                        <h2>Questionnaire Templates</h2>
+                        <button id="create-template-btn" class="btn btn-primary">Create New Template</button>
+                    </div>
+
+                    <div id="templates-list" class="card-grid"></div>
+                </div>
+
+                <!-- Instances Tab -->
+                <div id="tab-instances" class="tab-content">
+                    <div class="tab-header">
+                        <h2>Sent Questionnaires</h2>
+                        <button id="create-instance-btn" class="btn btn-primary">Send New Questionnaire</button>
+                    </div>
+
+                    <div id="instances-list" class="table-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Editor Modal -->
+    <div id="template-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="template-modal-title">Create Template</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="template-name">Name</label>
+                    <input type="text" id="template-name" placeholder="e.g., Web Application Security">
+                </div>
+
+                <div class="form-group">
+                    <label for="template-description">Description</label>
+                    <textarea id="template-description" rows="2" placeholder="Brief description..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="template-content">Content (JSON)</label>
+                    <textarea id="template-content" rows="20" class="code-editor" placeholder='{"questionnaire": [...]}'></textarea>
+                </div>
+
+                <div id="template-error" class="error-message" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="template-cancel-btn" class="btn">Cancel</button>
+                <button id="template-save-btn" class="btn btn-primary">Save Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instance Creator Modal -->
+    <div id="instance-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Send Questionnaire</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="instance-template">Template</label>
+                    <select id="instance-template">
+                        <option value="">Select a template...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="instance-target-name">Target Name (Optional)</label>
+                    <input type="text" id="instance-target-name" placeholder="Company or contact name">
+                </div>
+
+                <div class="form-group">
+                    <label for="instance-target-email">Target Email (Optional)</label>
+                    <input type="email" id="instance-target-email" placeholder="contact@company.com">
+                </div>
+
+                <div id="instance-link-result" class="info-box" style="display: none;">
+                    <h3>Questionnaire Link Created</h3>
+                    <p>Share this link with the recipient:</p>
+                    <div class="link-copy-container">
+                        <input type="text" id="instance-link-url" readonly class="link-input">
+                        <button id="copy-link-btn" class="btn btn-primary">Copy</button>
+                    </div>
+                </div>
+
+                <div id="instance-error" class="error-message" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="instance-cancel-btn" class="btn">Cancel</button>
+                <button id="instance-create-btn" class="btn btn-primary">Create Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

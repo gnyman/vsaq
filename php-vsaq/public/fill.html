@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSAQ - Questionnaire</title>
+    <link rel="stylesheet" href="/php-vsaq/public/css/vsaq.css">
+    <link rel="stylesheet" href="/php-vsaq/public/css/fill.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>VSAQ</h1>
+                <p class="subtitle">Security Assessment Questionnaire</p>
+            </div>
+        </header>
+
+        <div class="container">
+            <div id="locked-banner" class="locked-banner" style="display: none;">
+                <strong>This questionnaire has been submitted and is now locked.</strong>
+                You can review your answers but cannot make changes.
+            </div>
+
+            <div id="questionnaire-info" class="info-box" style="display: none;">
+                <h2 id="questionnaire-title"></h2>
+                <p id="questionnaire-description"></p>
+            </div>
+
+            <div id="progress-container" class="progress-container" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progress-answered">0</span> of <span id="progress-total">0</span> answered
+                    (<span id="progress-percent">0</span>%)
+                </div>
+            </div>
+
+            <div id="questionnaire-content"></div>
+
+            <div id="submit-container" class="submit-container" style="display: none;">
+                <button id="submit-btn" class="btn btn-primary btn-large">Submit Questionnaire</button>
+                <p class="submit-note">Once submitted, you will not be able to edit your answers.</p>
+            </div>
+
+            <div id="loading" class="loading">
+                <p>Loading questionnaire...</p>
+            </div>
+
+            <div id="error-state" class="error-state" style="display: none;">
+                <h2>Error</h2>
+                <p id="error-message"></p>
+            </div>
+        </div>
+
+        <!-- Auto-save indicator -->
+        <div id="autosave-indicator" class="autosave-indicator"></div>
+
+        <!-- Conflict Resolution Modal -->
+        <div id="conflict-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Conflict Detected</h2>
+                </div>
+                <div class="modal-body">
+                    <p>This answer was changed from another location. Your local changes conflict with the server version.</p>
+                    <p><strong>Would you like to overwrite the server version with your changes?</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="conflict-cancel-btn" class="btn">Cancel (Keep Server Version)</button>
+                    <button id="conflict-reload-btn" class="btn btn-danger">Reload Page</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/php-vsaq/public/js/fill.js"></script>
+</body>
+</html>
