@@ -114,3 +114,20 @@ To test the implementation:
 - Only one demo instance per template is created
 - The formatText function in fill.js allows HTML passthrough for admin-created content
 - All sample questionnaires are sourced from the `/questionnaires/` directory
+
+## Questionnaire Template Fixes
+
+The original VSAQ questionnaire templates (webapp.json and security_privacy_programs.json) used JavaScript string concatenation syntax that is not valid JSON:
+
+```javascript
+"text": "Part one" +
+        "Part two"
+```
+
+These have been converted to valid JSON:
+
+```json
+"text": "Part onePart two"
+```
+
+All 6 sample templates are now valid JSON and can be imported successfully.
