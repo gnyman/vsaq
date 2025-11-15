@@ -1,0 +1,23 @@
+# Data directory for saved answers and database
+data/
+src/data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# SQLite databases
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
