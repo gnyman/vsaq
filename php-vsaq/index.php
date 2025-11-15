@@ -812,15 +812,18 @@ function handlePopulateSamples() {
             continue;
         }
 
-        // Read and clean JSON (remove comments)
+        // Read and clean JSON (remove comment lines)
         $jsonContent = file_get_contents($q['file']);
 
-        // Remove // comments (but be careful with URLs)
+        // Remove lines that start with // (these are comments, not JSON)
+        // JSON strings containing "http://" will have quotes around them
         $lines = explode("\n", $jsonContent);
         $cleanedLines = [];
         foreach ($lines as $line) {
-            // Remove lines that are just comments
-            if (preg_match('/^\s*\/\//', $line)) {
+            $trimmed = ltrim($line);
+            // Skip comment-only lines (start with //)
+            // Real JSON with URLs will have quotes: "http://..."
+            if (strpos($trimmed, '//') === 0) {
                 continue;
             }
             $cleanedLines[] = $line;
