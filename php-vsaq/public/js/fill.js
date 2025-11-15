@@ -730,6 +730,9 @@ class VSAQFill {
     }
 
     formatText(text) {
+        // VSAQ questionnaires can contain HTML markup like <code>, <b>, <ul>, etc.
+        // We allow safe HTML tags while still supporting markdown-style formatting
+        // The questionnaires are admin-created, so we trust their content
         return text
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')

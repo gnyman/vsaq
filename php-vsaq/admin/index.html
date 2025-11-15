@@ -52,8 +52,13 @@
                 <div id="tab-templates" class="tab-content active">
                     <div class="tab-header">
                         <h2>Questionnaire Templates</h2>
-                        <button id="create-template-btn" class="btn btn-primary">Create New Template</button>
+                        <div class="tab-header-actions">
+                            <button id="load-samples-btn" class="btn btn-secondary">Load Sample Templates</button>
+                            <button id="create-template-btn" class="btn btn-primary">Create New Template</button>
+                        </div>
                     </div>
+
+                    <div id="samples-result" class="info-box" style="display: none; margin-bottom: 20px;"></div>
 
                     <div id="templates-list" class="card-grid"></div>
                 </div>
@@ -90,8 +95,23 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="template-content">Content (JSON)</label>
-                    <textarea id="template-content" rows="20" class="code-editor" placeholder='{"questionnaire": [...]}'></textarea>
+                    <label>
+                        <input type="checkbox" id="template-show-preview" checked>
+                        Show Live Preview
+                    </label>
+                </div>
+
+                <div class="editor-container">
+                    <div class="editor-pane">
+                        <div class="form-group">
+                            <label for="template-content">Content (JSON)</label>
+                            <textarea id="template-content" rows="20" class="code-editor" placeholder='{"questionnaire": [...]}'></textarea>
+                        </div>
+                    </div>
+                    <div id="preview-pane" class="preview-pane">
+                        <label>Preview</label>
+                        <div id="template-preview" class="template-preview"></div>
+                    </div>
                 </div>
 
                 <div id="template-error" class="error-message" style="display: none;"></div>
@@ -146,6 +166,7 @@
         </div>
     </div>
 
+    <script src="../public/js/vsaq.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>

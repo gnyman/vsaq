@@ -94,6 +94,10 @@ if (strpos($path, '/api/') === 0) {
                 requireAuth();
                 handleArchiveTemplate($m[1]);
                 break;
+            case '/api/admin/populate-samples':
+                requireAuth();
+                handlePopulateSamples();
+                break;
 
             // Admin - Questionnaire Instances
             case '/api/admin/instances':
@@ -757,4 +761,156 @@ function serveStaticFile($path) {
     $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
     header("Content-Type: $mimeType");
     readfile($filepath);
+}
+
+function handlePopulateSamples() {
+    $db = Database::getInstance()->getPdo();
+    $adminId = getCurrentAdmin();
+
+    // Sample questionnaires to import
+    $questionnaires = [
+        [
+            'file' => __DIR__ . '/../questionnaires/webapp.json',
+            'name' => 'Web Application Security',
+            'description' => 'Comprehensive security assessment for web applications covering HTTPS, authentication, data handling, and more.'
+        ],
+        [
+            'file' => __DIR__ . '/../questionnaires/infrastructure.json',
+            'name' => 'Infrastructure Security',
+            'description' => 'Assessment of network infrastructure, firewalls, access controls, and system hardening practices.'
+        ],
+        [
+            'file' => __DIR__ . '/../questionnaires/security_privacy_programs.json',
+            'name' => 'Security and Privacy Programs',
+            'description' => 'Evaluation of security and privacy policies, procedures, training, and governance.'
+        ],
+        [
+            'file' => __DIR__ . '/../questionnaires/physical_and_datacenter.json',
+            'name' => 'Physical and Datacenter Security',
+            'description' => 'Physical security controls, datacenter access, environmental controls, and asset management.'
+        ],
+        [
+            'file' => __DIR__ . '/../questionnaires/test_template.json',
+            'name' => 'Test Template (Simple)',
+            'description' => 'A simple test template for trying out VSAQ features.'
+        ],
+        [
+            'file' => __DIR__ . '/../questionnaires/test_template_extension.json',
+            'name' => 'Test Template Extension',
+            'description' => 'Extension example showing how to build on existing templates.'
+        ]
+    ];
+
+    $imported = [];
+    $skipped = [];
+    $errors = [];
+    $demoTemplateId = null;
+
+    foreach ($questionnaires as $q) {
+        if (!file_exists($q['file'])) {
+            $errors[] = "File not found: " . basename($q['file']);
+            continue;
+        }
+
+        // Read and clean JSON (remove comments)
+        $jsonContent = file_get_contents($q['file']);
+
+        // Remove // comments (but be careful with URLs)
+        $lines = explode("\n", $jsonContent);
+        $cleanedLines = [];
+        foreach ($lines as $line) {
+            // Remove lines that are just comments
+            if (preg_match('/^\s*\/\//', $line)) {
+                continue;
+            }
+            $cleanedLines[] = $line;
+        }
+        $jsonContent = implode("\n", $cleanedLines);
+
+        // Validate JSON
+        $parsed = json_decode($jsonContent);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $errors[] = "Invalid JSON in " . basename($q['file']) . ": " . json_last_error_msg();
+            continue;
+        }
+
+        // Check if template with this name already exists
+        $stmt = $db->prepare("SELECT id FROM questionnaire_templates WHERE name = ?");
+        $stmt->execute([$q['name']]);
+        $existing = $stmt->fetch();
+
+        if ($existing) {
+            $skipped[] = $q['name'];
+            if ($q['name'] === 'Web Application Security') {
+                $demoTemplateId = $existing['id'];
+            }
+            continue;
+        }
+
+        // Insert template
+        $stmt = $db->prepare("
+            INSERT INTO questionnaire_templates (name, description, content, created_by, created_at, updated_at, is_archived)
+            VALUES (?, ?, ?, ?, ?, ?, 0)
+        ");
+
+        $now = time();
+        $stmt->execute([
+            $q['name'],
+            $q['description'],
+            $jsonContent,
+            $adminId,
+            $now,
+            $now
+        ]);
+
+        $templateId = $db->lastInsertId();
+        $imported[] = $q['name'];
+
+        // Save the first template ID for demo
+        if ($q['name'] === 'Web Application Security') {
+            $demoTemplateId = $templateId;
+        }
+    }
+
+    // Create demo instance if we have the Web App template
+    $demoLink = null;
+    if ($demoTemplateId) {
+        // Check if demo already exists
+        $stmt = $db->prepare("SELECT unique_link FROM questionnaire_instances WHERE unique_link LIKE 'demo-%' AND template_id = ? LIMIT 1");
+        $stmt->execute([$demoTemplateId]);
+        $existingDemo = $stmt->fetch();
+
+        if ($existingDemo) {
+            $demoLink = '/php-vsaq/f/' . $existingDemo['unique_link'];
+        } else {
+            // Generate unique link
+            $uniqueLink = 'demo-' . bin2hex(random_bytes(12));
+
+            $stmt = $db->prepare("
+                INSERT INTO questionnaire_instances (template_id, unique_link, target_name, target_email, created_by, created_at, sent_at, is_locked, submitted_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 0, NULL)
+            ");
+
+            $now = time();
+            $stmt->execute([
+                $demoTemplateId,
+                $uniqueLink,
+                'Demo Company',
+                'demo@example.com',
+                $adminId,
+                $now,
+                $now
+            ]);
+
+            $demoLink = '/php-vsaq/f/' . $uniqueLink;
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'imported' => $imported,
+        'skipped' => $skipped,
+        'errors' => $errors,
+        'demo_link' => $demoLink
+    ]);
 }

@@ -78,6 +78,9 @@ class VSAQAdmin {
         // Create template
         document.getElementById('create-template-btn').addEventListener('click', () => this.openTemplateModal());
 
+        // Load samples
+        document.getElementById('load-samples-btn').addEventListener('click', () => this.loadSamples());
+
         // Create instance
         document.getElementById('create-instance-btn').addEventListener('click', () => this.openInstanceModal());
 
@@ -328,6 +331,33 @@ class VSAQAdmin {
         const name = document.getElementById('template-name');
         const description = document.getElementById('template-description');
         const content = document.getElementById('template-content');
+        const showPreview = document.getElementById('template-show-preview');
+        const editorContainer = document.querySelector('.editor-container');
+
+        // Set up preview toggle
+        if (!showPreview.__previewHandlerAdded) {
+            showPreview.addEventListener('change', () => {
+                editorContainer.classList.toggle('preview-hidden', !showPreview.checked);
+                if (showPreview.checked) {
+                    this.updateTemplatePreview();
+                }
+            });
+            showPreview.__previewHandlerAdded = true;
+        }
+
+        // Set up live preview on content change
+        if (!content.__previewHandlerAdded) {
+            let previewTimeout;
+            content.addEventListener('input', () => {
+                clearTimeout(previewTimeout);
+                previewTimeout = setTimeout(() => {
+                    if (showPreview.checked) {
+                        this.updateTemplatePreview();
+                    }
+                }, 500);
+            });
+            content.__previewHandlerAdded = true;
+        }
 
         if (templateId) {
             title.textContent = 'Edit Template';
@@ -358,12 +388,99 @@ class VSAQAdmin {
             }, null, 2);
         }
 
+        // Initial preview
+        if (showPreview.checked) {
+            this.updateTemplatePreview();
+        }
+
         modal.classList.add('show');
     }
 
     closeTemplateModal() {
         document.getElementById('template-modal').classList.remove('show');
         document.getElementById('template-error').style.display = 'none';
+    }
+
+    updateTemplatePreview() {
+        const content = document.getElementById('template-content').value.trim();
+        const previewEl = document.getElementById('template-preview');
+
+        if (!content) {
+            previewEl.innerHTML = '<p style="color: #999; font-style: italic;">No content to preview</p>';
+            return;
+        }
+
+        try {
+            const json = JSON.parse(content);
+
+            // Use VSAQ renderer if available
+            if (typeof VSAQ !== 'undefined') {
+                const renderer = new VSAQ();
+                previewEl.innerHTML = '';
+                renderer.renderPreview(json, previewEl);
+            } else {
+                // Simple fallback preview
+                previewEl.innerHTML = this.renderSimplePreview(json);
+            }
+        } catch (e) {
+            previewEl.innerHTML = `<p style="color: #d32f2f;">Invalid JSON: ${this.escapeHtml(e.message)}</p>`;
+        }
+    }
+
+    renderSimplePreview(json) {
+        let html = '';
+        const items = json.questionnaire || json.items || [];
+
+        items.forEach(item => {
+            html += this.renderPreviewItem(item);
+        });
+
+        return html || '<p style="color: #999;">Empty questionnaire</p>';
+    }
+
+    renderPreviewItem(item) {
+        if (!item || !item.type) return '';
+
+        let html = '<div class="questionnaire-item">';
+
+        switch (item.type) {
+            case 'block':
+                html += `<div class="block-header">${this.escapeHtml(item.text || '')}</div>`;
+                if (item.items) {
+                    html += '<div class="block-content">';
+                    item.items.forEach(subItem => {
+                        html += this.renderPreviewItem(subItem);
+                    });
+                    html += '</div>';
+                }
+                break;
+            case 'info':
+            case 'tip':
+                html += `<div class="item-text">${item.text || ''}</div>`;
+                break;
+            case 'line':
+            case 'box':
+            case 'check':
+            case 'yesno':
+            case 'radio':
+                html += `<div class="item-text"><strong>${this.escapeHtml(item.text || item.id || 'Question')}</strong></div>`;
+                break;
+            case 'radiogroup':
+            case 'checkgroup':
+                html += `<div class="item-text"><strong>${this.escapeHtml(item.text || '')}</strong></div>`;
+                if (item.choices) {
+                    html += '<ul style="margin-left: 20px;">';
+                    item.choices.forEach(choice => {
+                        const choiceText = typeof choice === 'object' ? Object.values(choice)[0] : choice;
+                        html += `<li>${choiceText}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                break;
+        }
+
+        html += '</div>';
+        return html;
     }
 
     async saveTemplate() {
@@ -469,6 +586,72 @@ class VSAQAdmin {
         const errorEl = document.getElementById('template-error');
         errorEl.textContent = message;
         errorEl.style.display = 'block';
+    }
+
+    async loadSamples() {
+        try {
+            const btn = document.getElementById('load-samples-btn');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            const response = await fetch('/php-vsaq/api/admin/populate-samples', {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load samples');
+            }
+
+            const data = await response.json();
+
+            // Show result
+            const resultEl = document.getElementById('samples-result');
+            let html = '<h3>Sample Templates Loaded</h3>';
+
+            if (data.imported.length > 0) {
+                html += '<p><strong>Imported:</strong></p><ul>';
+                data.imported.forEach(name => {
+                    html += `<li>${name}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            if (data.skipped.length > 0) {
+                html += '<p><strong>Already existed:</strong></p><ul>';
+                data.skipped.forEach(name => {
+                    html += `<li>${name}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            if (data.errors.length > 0) {
+                html += '<p><strong>Errors:</strong></p><ul>';
+                data.errors.forEach(err => {
+                    html += `<li class="error">${err}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            if (data.demo_link) {
+                html += `<p><strong>Demo Link:</strong> <a href="${data.demo_link}" target="_blank">${window.location.origin}${data.demo_link}</a></p>`;
+            }
+
+            resultEl.innerHTML = html;
+            resultEl.style.display = 'block';
+
+            // Reload templates list
+            await this.loadTemplates();
+
+            btn.disabled = false;
+            btn.textContent = 'Load Sample Templates';
+        } catch (error) {
+            console.error('Failed to load samples:', error);
+            alert('Failed to load sample templates: ' + error.message);
+
+            const btn = document.getElementById('load-samples-btn');
+            btn.disabled = false;
+            btn.textContent = 'Load Sample Templates';
+        }
     }
 
     // ========================================================================
