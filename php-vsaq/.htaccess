@@ -1,31 +1,37 @@
 # VSAQ PHP - Apache Configuration
+# This file ensures all requests are routed through index.php for security
 
 # Enable rewrite engine
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /php-vsaq/
+RewriteEngine On
 
-    # Route all requests through index.php
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ index.php [QSA,L]
+# Security: Block direct access to sensitive directories
+# Prevent access to source files, configuration, and data
+RewriteRule ^src/ - [F,L]
+RewriteRule ^data/ - [F,L]
+RewriteRule ^\.git/ - [F,L]
+
+# Route all requests through index.php (except existing files in allowed directories)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+
+# For static files, only serve from specific directories
+RewriteCond %{REQUEST_URI} !^/(admin|public)/
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [F,L]
+
+# Security Headers (additional to those in PHP)
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# Security: Deny access to data directory
-<FilesMatch "^(data/)">
-    Order allow,deny
-    Deny from all
+# Disable directory browsing
+Options -Indexes
+
+# Prevent access to .htaccess and .htpasswd files
+<FilesMatch "^\.ht">
+    Require all denied
 </FilesMatch>
-
-# Enable compression
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
-</IfModule>
-
-# Browser caching
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType text/css "access plus 1 week"
-    ExpiresByType application/javascript "access plus 1 week"
-    ExpiresByType application/json "access plus 1 hour"
-</IfModule>

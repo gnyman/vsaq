@@ -1,0 +1,46 @@
+# VSAQ PHP - Nginx Configuration Example
+# Place this in your Nginx server block
+
+server {
+    listen 80;
+    server_name vsaq.example.com;
+
+    root /path/to/vsaq/php-vsaq;
+    index index.php;
+
+    # Security: Block access to sensitive directories
+    location ~ ^/(src|data|\.git) {
+        deny all;
+        return 404;
+    }
+
+    # Security: Only serve static files from specific directories
+    location ~ ^/(admin|public)/ {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    # Route all other requests through index.php
+    location / {
+        try_files $uri /index.php$is_args$args;
+    }
+
+    # PHP-FPM configuration
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+
+        # Security Headers
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # Deny access to .htaccess and other hidden files
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+}

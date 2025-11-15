@@ -7,6 +7,13 @@
 // Start session
 session_start();
 
+// Security Headers
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+// Note: CSP configured per-route as needed
+
 // Auto-load classes
 spl_autoload_register(function ($class) {
     $file = __DIR__ . '/src/' . $class . '.php';
@@ -164,7 +171,7 @@ function handleRegisterOptions() {
     }
 
     $origin = getOrigin();
-    $rpId = $_SERVER['HTTP_HOST'];
+    $rpId = getValidatedHost();
 
     $webauthn = new WebAuthn($rpId, 'VSAQ Admin', $origin);
     $options = $webauthn->generateRegistrationOptions($username);
@@ -270,7 +277,12 @@ function handleCanRegister() {
 function handleGetTemplates() {
     $db = Database::getInstance()->getPdo();
 
+    // Security: Validate input - only accept 'true' or 'false'
     $includeArchived = $_GET['archived'] ?? 'false';
+    if ($includeArchived !== 'true' && $includeArchived !== 'false') {
+        $includeArchived = 'false';
+    }
+
     $sql = "SELECT t.*, a.username as created_by_username
             FROM questionnaire_templates t
             JOIN admins a ON t.created_by = a.id";
@@ -698,7 +710,27 @@ function getOrigin() {
     }
 
     $protocol = $isHttps ? 'https' : 'http';
-    return $protocol . '://' . $_SERVER['HTTP_HOST'];
+
+    // Security: Validate HTTP_HOST to prevent header injection
+    $host = getValidatedHost();
+    return $protocol . '://' . $host;
+}
+
+function getValidatedHost() {
+    $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+
+    // Security: Validate hostname format to prevent injection
+    // Allow only alphanumeric, dots, hyphens, and port numbers
+    if (!preg_match('/^[a-zA-Z0-9.-]+(:[0-9]+)?$/', $host)) {
+        // Invalid host format, use SERVER_NAME or default
+        $host = $_SERVER['SERVER_NAME'] ?? 'localhost';
+    }
+
+    // Additional validation: Check against allowed hosts if configured
+    // In production, you should whitelist allowed hostnames
+    // For now, we'll just ensure it doesn't contain dangerous characters
+
+    return $host;
 }
 
 function getCurrentAdmin() {
@@ -738,15 +770,51 @@ function serveFillForm($uniqueLink) {
 }
 
 function serveStaticFile($path) {
-    $filepath = __DIR__ . $path;
+    // Security: Prevent path traversal attacks
+    // Build the full path
+    $basePath = __DIR__;
+    $requestedPath = $basePath . $path;
 
-    if (!file_exists($filepath) || is_dir($filepath)) {
+    // Resolve to real path (eliminates ../ and symbolic links)
+    $realPath = realpath($requestedPath);
+
+    // Check if file exists and is within allowed directory
+    if (!$realPath || !file_exists($realPath) || is_dir($realPath)) {
         http_response_code(404);
         echo '404 Not Found';
         return;
     }
 
-    $extension = pathinfo($filepath, PATHINFO_EXTENSION);
+    // Security: Ensure the resolved path is within the base directory
+    // This prevents directory traversal attacks like /admin/../../etc/passwd
+    if (strpos($realPath, $basePath) !== 0) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        return;
+    }
+
+    // Additional security: Only serve files from specific allowed directories
+    $allowedDirs = [
+        $basePath . '/admin',
+        $basePath . '/public'
+    ];
+
+    $isAllowed = false;
+    foreach ($allowedDirs as $allowedDir) {
+        $realAllowedDir = realpath($allowedDir);
+        if ($realAllowedDir && strpos($realPath, $realAllowedDir) === 0) {
+            $isAllowed = true;
+            break;
+        }
+    }
+
+    if (!$isAllowed) {
+        http_response_code(403);
+        echo '403 Forbidden';
+        return;
+    }
+
+    $extension = pathinfo($realPath, PATHINFO_EXTENSION);
     $mimeTypes = [
         'html' => 'text/html',
         'css' => 'text/css',
@@ -760,7 +828,7 @@ function serveStaticFile($path) {
 
     $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
     header("Content-Type: $mimeType");
-    readfile($filepath);
+    readfile($realPath);
 }
 
 function handlePopulateSamples() {
