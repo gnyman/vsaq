@@ -1,2 +1,32 @@
 # Files generated during the build process
 build/
+
+# Node modules
+node_modules/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Test artifacts
+*.mp4
+*.webm
+trace.zip
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

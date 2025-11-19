@@ -1,0 +1,14 @@
+{
+  "name": "vsaq-testing",
+  "version": "1.0.0",
+  "description": "Automated testing for VSAQ PHP application",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

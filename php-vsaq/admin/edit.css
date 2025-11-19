@@ -1,0 +1,427 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    background: #f5f5f5;
+}
+
+.editor-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header */
+.editor-header {
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.editor-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.template-info {
+    display: flex;
+    gap: 10px;
+}
+
+.template-info input,
+.template-info textarea {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.template-info input {
+    flex: 1;
+    max-width: 300px;
+}
+
+.template-info textarea {
+    flex: 2;
+    resize: vertical;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+/* Buttons */
+.btn {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: #333;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background: #f0f0f0;
+}
+
+.btn-primary {
+    background: #0066cc;
+    color: #fff;
+    border-color: #0066cc;
+}
+
+.btn-primary:hover {
+    background: #0052a3;
+}
+
+.btn-secondary {
+    background: #fff;
+    color: #333;
+}
+
+/* Main Editor Area */
+.editor-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    overflow: hidden;
+}
+
+.toolbar {
+    background: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    padding: 15px;
+}
+
+.toolbar h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.question-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.add-question {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.add-question:hover {
+    background: #0066cc;
+    color: #fff;
+    border-color: #0066cc;
+}
+
+/* Question Tree */
+.questionnaire-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.question-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: move;
+}
+
+.question-item.dragging {
+    opacity: 0.5;
+}
+
+.question-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.question-type {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.question-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.question-actions button {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.question-actions button:hover {
+    background: #f0f0f0;
+}
+
+.question-actions .delete-btn:hover {
+    background: #dc3545;
+    color: #fff;
+    border-color: #dc3545;
+}
+
+.question-content {
+    font-size: 14px;
+    color: #666;
+}
+
+.question-id {
+    font-size: 12px;
+    color: #999;
+    font-family: monospace;
+}
+
+/* Nested items (for blocks) */
+.nested-items {
+    margin-left: 20px;
+    margin-top: 10px;
+    padding-left: 10px;
+    border-left: 2px solid #ddd;
+}
+
+/* Preview Pane */
+.preview-pane {
+    flex: 1;
+    background: #f9f9f9;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.preview-pane.hidden {
+    display: none;
+}
+
+.preview-pane h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.preview-content {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    min-height: 200px;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-content h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+#edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group input[type="checkbox"] {
+    width: auto;
+}
+
+.form-help {
+    font-size: 12px;
+    color: #666;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+/* Choices Editor (for radiogroup, checkgroup) */
+.choices-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.choice-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.choice-item input {
+    flex: 1;
+}
+
+.choice-item button {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.add-choice-btn {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.add-choice-btn:hover {
+    background: #f0f0f0;
+}
+
+/* Validation Errors */
+.validation-errors {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border: 2px solid #dc3545;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 2000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.validation-errors h3 {
+    font-size: 16px;
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.validation-errors ul {
+    list-style: none;
+    margin-bottom: 15px;
+}
+
+.validation-errors li {
+    padding: 8px 12px;
+    background: #f8d7da;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    color: #721c24;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.empty-state p {
+    font-size: 14px;
+    margin-bottom: 15px;
+}

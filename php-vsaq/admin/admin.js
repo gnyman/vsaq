@@ -75,8 +75,10 @@ class VSAQAdmin {
         // Logout
         document.getElementById('logout-btn').addEventListener('click', () => this.logout());
 
-        // Create template
-        document.getElementById('create-template-btn').addEventListener('click', () => this.openTemplateModal());
+        // Create template - redirect to visual editor
+        document.getElementById('create-template-btn').addEventListener('click', () => {
+            window.location.href = 'edit.php';
+        });
 
         // Create instance
         document.getElementById('create-instance-btn').addEventListener('click', () => this.openInstanceModal());
@@ -309,7 +311,8 @@ class VSAQAdmin {
                     Created by ${this.escapeHtml(template.created_by_username)} on ${this.formatDate(template.created_at)}
                 </div>
                 <div class="card-actions">
-                    <button class="btn btn-primary" onclick="vsaqAdmin.editTemplate(${template.id})">Edit</button>
+                    <button class="btn btn-primary" onclick="vsaqAdmin.editTemplate(${template.id})">Visual Editor</button>
+                    <button class="btn" onclick="vsaqAdmin.editTemplateJSON(${template.id})">JSON Editor</button>
                     <button class="btn" onclick="vsaqAdmin.duplicateTemplate(${template.id})">Duplicate</button>
                     <button class="btn" onclick="vsaqAdmin.archiveTemplate(${template.id}, ${!isArchived})">${isArchived ? 'Unarchive' : 'Archive'}</button>
                     ${!hasSentInstances ? `<button class="btn btn-danger" onclick="vsaqAdmin.deleteTemplate(${template.id})">Delete</button>` : ''}
@@ -411,6 +414,12 @@ class VSAQAdmin {
     }
 
     async editTemplate(id) {
+        // Redirect to visual editor
+        window.location.href = `edit.php?id=${id}`;
+    }
+
+    async editTemplateJSON(id) {
+        // Open JSON editor modal
         this.openTemplateModal(id);
     }
 
